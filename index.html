@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blackjack Advisor - Bayesian Strategy</title>
+    <meta name="description" content="ที่ปรึกษาการเล่น Blackjack โดยใช้หลักการทางคณิตศาสตร์และ Bayesian Probability">
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="background-effects">
+        <div class="glow glow-1"></div>
+        <div class="glow glow-2"></div>
+        <div class="glow glow-3"></div>
+    </div>
+
+    <div class="container">
+        <header class="header">
+            <h1 class="title">
+                <span class="title-icon">🃏</span>
+                Blackjack Advisor
+            </h1>
+            <p class="subtitle">Bayesian Strategy & High-Low Count System</p>
+        </header>
+
+        <!-- Deck Configuration -->
+        <section class="card-section deck-config">
+            <h2 class="section-title">⚙️ การตั้งค่าสำรับ</h2>
+            <div class="deck-options">
+                <label class="deck-option">
+                    <input type="radio" name="decks" value="1" checked>
+                    <span class="deck-label">1 สำรับ</span>
+                </label>
+                <label class="deck-option">
+                    <input type="radio" name="decks" value="2">
+                    <span class="deck-label">2 สำรับ</span>
+                </label>
+                <label class="deck-option">
+                    <input type="radio" name="decks" value="6">
+                    <span class="deck-label">6 สำรับ</span>
+                </label>
+                <label class="deck-option">
+                    <input type="radio" name="decks" value="8">
+                    <span class="deck-label">8 สำรับ</span>
+                </label>
+            </div>
+            <button id="resetDeck" class="reset-btn">🔄 รีเซ็ตสำรับใหม่</button>
+        </section>
+
+        <!-- Card Picker -->
+        <section class="card-section">
+            <h2 class="section-title">🎴 เลือกไพ่</h2>
+            <div class="card-picker" id="cardPicker">
+                <button class="card-btn" data-value="A">A</button>
+                <button class="card-btn" data-value="2">2</button>
+                <button class="card-btn" data-value="3">3</button>
+                <button class="card-btn" data-value="4">4</button>
+                <button class="card-btn" data-value="5">5</button>
+                <button class="card-btn" data-value="6">6</button>
+                <button class="card-btn" data-value="7">7</button>
+                <button class="card-btn" data-value="8">8</button>
+                <button class="card-btn" data-value="9">9</button>
+                <button class="card-btn" data-value="10">10</button>
+                <button class="card-btn" data-value="J">J</button>
+                <button class="card-btn" data-value="Q">Q</button>
+                <button class="card-btn" data-value="K">K</button>
+            </div>
+        </section>
+
+        <!-- Player Management -->
+        <section class="card-section player-management">
+            <h2 class="section-title">👥 จำนวนผู้เล่น</h2>
+            <div class="player-count-controls">
+                <button id="decreasePlayer" class="player-count-btn">−</button>
+                <span class="player-count-display">
+                    <span id="playerCount">1</span> ผู้เล่น
+                </span>
+                <button id="increasePlayer" class="player-count-btn">+</button>
+            </div>
+        </section>
+
+        <!-- Players Container -->
+        <section class="card-section players-container">
+            <div class="players-tabs" id="playersTabs">
+                <button class="player-tab active" data-player="1">ผู้เล่น 1</button>
+            </div>
+            <div class="players-hands" id="playersHands">
+                <!-- Player hands will be dynamically generated -->
+            </div>
+        </section>
+
+        <!-- Dealer Card -->
+        <section class="card-section">
+            <div class="hand-header">
+                <h2 class="section-title">🎩 ไพ่หน้าเจ้ามือ</h2>
+                <button id="clearDealer" class="clear-btn">ล้าง</button>
+            </div>
+            <div class="hand-display dealer-hand" id="dealerHand">
+                <div class="empty-hand">คลิกไพ่ด้านบนเพื่อเลือก</div>
+            </div>
+        </section>
+
+        <!-- Mode Toggle -->
+        <div class="mode-toggle" id="modeToggle">
+            <button class="mode-btn active" data-mode="player" data-player="1">👤 ผู้เล่น 1</button>
+            <button class="mode-btn" data-mode="dealer">🎩 เจ้ามือ</button>
+        </div>
+
+
+        <!-- Recommendation -->
+        <section class="recommendation-section" id="recommendationSection">
+            <h2 class="section-title">💡 คำแนะนำ</h2>
+            <div class="recommendation-display">
+                <div class="main-recommendation" id="mainRecommendation">
+                    <span class="recommendation-icon">🤔</span>
+                    <span class="recommendation-text">เลือกไพ่เพื่อรับคำแนะนำ</span>
+                </div>
+                <div class="recommendation-reason" id="recommendationReason"></div>
+            </div>
+        </section>
+
+        <!-- Probability Stats -->
+        <section class="stats-section">
+            <h2 class="section-title">📊 สถิติและความน่าจะเป็น</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">🔢</div>
+                    <div class="stat-label">Running Count</div>
+                    <div class="stat-value" id="runningCount">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📈</div>
+                    <div class="stat-label">True Count</div>
+                    <div class="stat-value" id="trueCount">0.00</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🃏</div>
+                    <div class="stat-label">ไพ่ที่เหลือ</div>
+                    <div class="stat-value" id="remainingCards">52</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">💰</div>
+                    <div class="stat-label">แนะนำเดิมพัน</div>
+                    <div class="stat-value" id="betAdvice">ปกติ</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Probability Breakdown -->
+        <section class="card-section probability-section">
+            <h2 class="section-title">🎯 ความน่าจะเป็นของเจ้ามือ</h2>
+            <div class="probability-grid" id="dealerProbabilities">
+                <div class="prob-item">
+                    <span class="prob-label">Bust (เกิน 21)</span>
+                    <div class="prob-bar-container">
+                        <div class="prob-bar bust" style="width: 28.1%"></div>
+                    </div>
+                    <span class="prob-value">28.1%</span>
+                </div>
+                <div class="prob-item">
+                    <span class="prob-label">ได้ 17</span>
+                    <div class="prob-bar-container">
+                        <div class="prob-bar" style="width: 14.5%"></div>
+                    </div>
+                    <span class="prob-value">14.5%</span>
+                </div>
+                <div class="prob-item">
+                    <span class="prob-label">ได้ 18</span>
+                    <div class="prob-bar-container">
+                        <div class="prob-bar" style="width: 13.9%"></div>
+                    </div>
+                    <span class="prob-value">13.9%</span>
+                </div>
+                <div class="prob-item">
+                    <span class="prob-label">ได้ 19</span>
+                    <div class="prob-bar-container">
+                        <div class="prob-bar" style="width: 13.3%"></div>
+                    </div>
+                    <span class="prob-value">13.3%</span>
+                </div>
+                <div class="prob-item">
+                    <span class="prob-label">ได้ 20</span>
+                    <div class="prob-bar-container">
+                        <div class="prob-bar" style="width: 18%"></div>
+                    </div>
+                    <span class="prob-value">18.0%</span>
+                </div>
+                <div class="prob-item">
+                    <span class="prob-label">ได้ 21</span>
+                    <div class="prob-bar-container">
+                        <div class="prob-bar" style="width: 7.2%"></div>
+                    </div>
+                    <span class="prob-value">7.2%</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Card Tracking -->
+        <section class="card-section tracking-section">
+            <h2 class="section-title">📋 ไพ่ที่ออกไปแล้ว</h2>
+            <div class="card-tracking-grid" id="cardTracking">
+                <div class="track-item" data-value="A">
+                    <span class="track-card">A</span>
+                    <span class="track-count" id="trackA">0</span>
+                </div>
+                <div class="track-item" data-value="2">
+                    <span class="track-card">2</span>
+                    <span class="track-count" id="track2">0</span>
+                </div>
+                <div class="track-item" data-value="3">
+                    <span class="track-card">3</span>
+                    <span class="track-count" id="track3">0</span>
+                </div>
+                <div class="track-item" data-value="4">
+                    <span class="track-card">4</span>
+                    <span class="track-count" id="track4">0</span>
+                </div>
+                <div class="track-item" data-value="5">
+                    <span class="track-card">5</span>
+                    <span class="track-count" id="track5">0</span>
+                </div>
+                <div class="track-item" data-value="6">
+                    <span class="track-card">6</span>
+                    <span class="track-count" id="track6">0</span>
+                </div>
+                <div class="track-item" data-value="7">
+                    <span class="track-card">7</span>
+                    <span class="track-count" id="track7">0</span>
+                </div>
+                <div class="track-item" data-value="8">
+                    <span class="track-card">8</span>
+                    <span class="track-count" id="track8">0</span>
+                </div>
+                <div class="track-item" data-value="9">
+                    <span class="track-card">9</span>
+                    <span class="track-count" id="track9">0</span>
+                </div>
+                <div class="track-item" data-value="10">
+                    <span class="track-card">10/J/Q/K</span>
+                    <span class="track-count" id="track10">0</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Strategy Table -->
+        <section class="card-section strategy-section">
+            <h2 class="section-title">📖 ตาราง Basic Strategy</h2>
+            <div class="strategy-tabs">
+                <button class="strategy-tab active" data-tab="hard">Hard Hands</button>
+                <button class="strategy-tab" data-tab="soft">Soft Hands</button>
+                <button class="strategy-tab" data-tab="split">Pairs</button>
+            </div>
+            <div class="strategy-table-container" id="strategyTableContainer">
+                <!-- Strategy tables will be inserted here -->
+            </div>
+            <div class="strategy-legend">
+                <span class="legend-item"><span class="legend-color hit"></span> H = Hit</span>
+                <span class="legend-item"><span class="legend-color stand"></span> S = Stand</span>
+                <span class="legend-item"><span class="legend-color double"></span> D = Double</span>
+                <span class="legend-item"><span class="legend-color split"></span> P = Split</span>
+            </div>
+        </section>
+
+        <!-- Info Section -->
+        <section class="card-section info-section">
+            <h2 class="section-title">ℹ️ วิธีใช้งาน</h2>
+            <div class="info-content">
+                <div class="info-item">
+                    <div class="info-icon">1️⃣</div>
+                    <p>เลือกจำนวนสำรับที่ใช้เล่น</p>
+                </div>
+                <div class="info-item">
+                    <div class="info-icon">2️⃣</div>
+                    <p>คลิกไพ่เพื่อเพิ่มในมือผู้เล่น หรือสลับโหมดเพื่อเลือกไพ่เจ้ามือ</p>
+                </div>
+                <div class="info-item">
+                    <div class="info-icon">3️⃣</div>
+                    <p>ดูคำแนะนำที่คำนวณจาก Basic Strategy และ High-Low Count</p>
+                </div>
+                <div class="info-item">
+                    <div class="info-icon">4️⃣</div>
+                    <p>ระบบจะติดตามไพ่และอัปเดต True Count อัตโนมัติ</p>
+                </div>
+            </div>
+        </section>
+
+        <footer class="footer">
+            <p>Based on mathematical principles from <a href="https://probability.infarom.ro/blackjack.html"
+                    target="_blank">Probability.infarom.ro</a></p>
+            <p class="disclaimer">⚠️ การพนันมีความเสี่ยง ควรเล่นอย่างมีความรับผิดชอบ</p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
